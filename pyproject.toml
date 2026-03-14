@@ -1,38 +1,33 @@
 [project]
 name = "video-rag"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     # Core
     "pixeltable>=0.2.26",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
     "loguru",
-
     # API
     "fastapi",
     "uvicorn[standard]",
-    "python-multipart",       # file uploads
+    "python-multipart", # file uploads
     "click",
-
     # MCP
     "fastmcp",
-
     # AWS / Nova
-    "boto3",
     "botocore",
-
     # Media processing
-    "av",                     # PyAV for video
+    "av", # PyAV for video
     "moviepy",
     "pillow",
     "opencv-python-headless",
-
     # Observability
     "opik",
-
     # Misc
     "instructor",
+    "boto3>=1.42.59",
+    "aws-sdk-bedrock-runtime>=0.4.0",
 ]
 
 [project.scripts]

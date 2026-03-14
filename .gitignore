@@ -8,3 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+.env
+.backend.pids
+logs/
+frontend/
+shared_media/

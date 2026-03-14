@@ -1,13 +1,20 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# config.py lives at <project_root>/app/config.py
+# .env lives at <project_root>/.env — use an absolute path so pydantic-settings
+# always finds it regardless of the CWD when the process is started.
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_ENV_FILE = str(_PROJECT_ROOT / ".env")
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_ENV_FILE,
         extra="ignore",
         env_file_encoding="utf-8",
     )
@@ -20,6 +27,15 @@ class Settings(BaseSettings):
     # Nova model IDs (Bedrock)
     NOVA_LITE_MODEL_ID: str = "amazon.nova-lite-v1:0"
     NOVA_PRO_MODEL_ID: str = "amazon.nova-pro-v1:0"
+
+    # Nova 2 Sonic — real-time bidirectional speech via Bedrock streaming.
+    # Uses a separate WebSocket-based API (not Converse).
+    NOVA_SONIC_MODEL_ID: str = "amazon.nova-sonic-v1:0"
+    SONIC_VOICE_ID: str = "tiffany"          # Options: tiffany, matthew, amy
+    SONIC_SAMPLE_RATE: int = 16000           # Hz — input audio sample rate
+    SONIC_OUTPUT_SAMPLE_RATE: int = 24000    # Hz — output audio sample rate
+    SONIC_AUDIO_INPUT_FORMAT: str = "audio/lpcm"
+    SONIC_AUDIO_OUTPUT_FORMAT: str = "audio/lpcm"
 
     # Amazon Titan multimodal embeddings — single unified embedding space for
     # both text queries and images, replacing the 3 separate indexes in the
@@ -39,7 +55,9 @@ class Settings(BaseSettings):
 
     # ── Video Processing ───────────────────────────────────────────────────────
     # Number of frames to uniformly sample from the full video duration.
-    SPLIT_FRAMES_COUNT: int = 45
+    # Lower = faster processing, higher = better search quality.
+    # ~15 frames is a good balance for most videos.
+    SPLIT_FRAMES_COUNT: int = 15
 
     # Audio chunking — overlap avoids cutting sentences at boundaries.
     AUDIO_CHUNK_LENGTH: int = 10          # seconds per chunk
@@ -80,9 +98,11 @@ class Settings(BaseSettings):
 
     # Nova Lite is used for fast routing (does the query need a tool?).
     # Nova Pro is used for tool-selection, RAG answering, and general chat.
-    ROUTING_MODEL: str = Field(default=None)   # resolved in validator below
-    TOOL_USE_MODEL: str = Field(default=None)
-    GENERAL_MODEL: str = Field(default=None)
+    # Typed Optional[str] so Pydantic accepts the None default; the
+    # _resolve_model_defaults validator below fills them in at startup.
+    ROUTING_MODEL: Optional[str] = Field(default=None)   # resolved in validator below
+    TOOL_USE_MODEL: Optional[str] = Field(default=None)
+    GENERAL_MODEL: Optional[str] = Field(default=None)
 
     # ── MCP Server ─────────────────────────────────────────────────────────────
     MCP_HOST: str = "0.0.0.0"
@@ -108,6 +128,18 @@ class Settings(BaseSettings):
     SHARED_MEDIA_DIR: str = "shared_media"
 
     # ──────────────────────────────────────────────────────────────────────────
+    @model_validator(mode="after")
+    def _normalize_sonic_settings(self) -> "Settings":
+        """Normalize Sonic settings loaded from .env (strip inline comments/whitespace)."""
+        if self.SONIC_VOICE_ID:
+            # Handle values like: "tiffany  # options: ..."
+            cleaned = self.SONIC_VOICE_ID.split("#", 1)[0].strip().lower()
+            self.SONIC_VOICE_ID = cleaned
+
+        if not self.SONIC_VOICE_ID:
+            self.SONIC_VOICE_ID = "tiffany"
+        return self
+
     @model_validator(mode="after")
     def _resolve_model_defaults(self) -> "Settings":
         """
