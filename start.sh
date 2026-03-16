@@ -31,8 +31,10 @@ done
 echo "Starting API server..."
 cd /app/app
 PYTHONPATH=/app/app MCP_SERVER_URL=http://localhost:9090/mcp \
-    python -m gunicorn -c /app/gunicorn_config.py api.app:app \
+    gunicorn -c /app/gunicorn_config.py api.app:app \
     --bind 0.0.0.0:8080 \
+    --workers 2 \
+    --timeout 300 \
     >> /app/logs/api.log 2>&1 &
 
 API_PID=$!
