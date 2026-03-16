@@ -1,3 +1,13 @@
+---
+title: Video RAG
+emoji: 🎬
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 8080
+pinned: false
+---
+
 # Video RAG — Multimodal Video Intelligence on Amazon Bedrock
 
 A production-ready multimodal video search and question-answering system built on **Amazon Nova** (Lite, Pro, Sonic, and Titan Multimodal Embeddings) via Amazon Bedrock. Users can upload videos, ask natural-language questions, retrieve precise clips by text or image query, and interact through a real-time voice interface powered by Nova Sonic.
