@@ -11,6 +11,7 @@ dependencies = [
     # API
     "fastapi",
     "uvicorn[standard]",
+    "gunicorn",
     "python-multipart", # file uploads
     "click",
     # MCP
