@@ -12,4 +12,11 @@ wheels/
 .backend.pids
 logs/
 
+# Frontend dependencies and caches
+node_modules/
+frontend/node_modules/
+frontend/.vite/
+frontend/.vercel/
+frontend/dist/
+
 shared_media/
